@@ -5,6 +5,7 @@ import { Button } from 'src/ui/button';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
+import { Text } from 'src/ui/text';
 import {
 	fontFamilyOptions,
 	fontSizeOptions,
@@ -15,29 +16,31 @@ import {
 	ArticleStateType,
 	OptionType,
 } from 'src/constants/articleProps';
+import { useClose } from 'src/hooks/useClose';
 
 import styles from './ArticleParamsForm.module.scss';
 
 type ArticleParamsFormProps = {
-	isOpen: boolean;
-	onClose: () => void;
 	currentStyle: ArticleStateType;
 	onApply: (style: ArticleStateType) => void;
 	onReset: () => void;
 };
 
 export const ArticleParamsForm = ({
-	isOpen,
-	onClose,
 	currentStyle,
 	onApply,
 	onReset,
 }: ArticleParamsFormProps) => {
-	// Локальное состояние формы
+	const [isOpen, setIsOpen] = useState(false);
 	const [formState, setFormState] = useState<ArticleStateType>(currentStyle);
 
-	// Ref для aside элемента
-	const asideRef = useRef<HTMLDivElement>(null);
+	const asideRef = useRef<HTMLElement>(null);
+
+	useClose({
+		isOpen,
+		onClose: () => setIsOpen(false),
+		rootRef: asideRef,
+	});
 
 	// Инициализация формы при открытии
 	useEffect(() => {
@@ -45,26 +48,6 @@ export const ArticleParamsForm = ({
 			setFormState(currentStyle);
 		}
 	}, [isOpen, currentStyle]);
-
-	// Обработчик закрытия по клику вне формы
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				asideRef.current &&
-				!asideRef.current.contains(event.target as Node)
-			) {
-				onClose();
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isOpen, onClose]);
 
 	// Обработчики изменения полей формы
 	const handleFontFamilyChange = (option: OptionType) => {
@@ -91,24 +74,37 @@ export const ArticleParamsForm = ({
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		onApply(formState);
-		onClose();
+		setIsOpen(false);
 	};
 
 	// Обработчик Reset (Сбросить)
-	const handleResetClick = () => {
+	const handleResetForm = (e: React.FormEvent) => {
+		e.preventDefault();
 		const resetState = defaultArticleState;
 		setFormState(resetState);
 		onReset();
-		onClose();
+		setIsOpen(false);
+	};
+
+	// Обработчик открытия/закрытия через кнопку
+	const handleArrowButtonClick = () => {
+		setIsOpen(!isOpen);
 	};
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={onClose} />
+			<ArrowButton isOpen={isOpen} onClick={handleArrowButtonClick} />
 			<aside
 				className={clsx(styles.container, { [styles.container_open]: isOpen })}
 				ref={asideRef}>
-				<form className={styles.form} onSubmit={handleSubmit}>
+				<form
+					className={styles.form}
+					onSubmit={handleSubmit}
+					onReset={handleResetForm}>
+					<Text as='h2' size={31} weight={800} uppercase align='center'>
+						Задайте параметры
+					</Text>
+
 					<div className={styles.formContent}>
 						{/* Шрифт */}
 						<Select
@@ -165,12 +161,7 @@ export const ArticleParamsForm = ({
 					</div>
 
 					<div className={styles.bottomContainer}>
-						<Button
-							title='Сбросить'
-							htmlType='button'
-							type='clear'
-							onClick={handleResetClick}
-						/>
+						<Button title='Сбросить' htmlType='reset' type='clear' />
 						<Button title='Применить' htmlType='submit' type='apply' />
 					</div>
 				</form>
