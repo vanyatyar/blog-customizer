@@ -19,7 +19,6 @@ export const App = () => {
 	const handleReset = () => {
 		setArticleState(defaultArticleState);
 	};
-
 	return (
 		<main
 			className={styles.main}
