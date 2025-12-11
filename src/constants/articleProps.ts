@@ -15,9 +15,7 @@ export type OptionType = {
 	optionClassName?: string;
 };
 
-export const fontFamilyOptions: OptionType[] & {
-	optionClassName?: FontFamiliesClasses;
-} = [
+export const fontFamilyOptions: OptionType[] = [
 	{ title: 'Open Sans', value: 'Open Sans', className: fontFamilyClasses[0] },
 	{ title: 'Ubuntu', value: 'Ubuntu', className: fontFamilyClasses[1] },
 	{
